@@ -1,0 +1,142 @@
+# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-python
+
+name: Python application
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+    - name: Set up Python 3.10
+      uses: actions/setup-python@v3
+      with:
+        python-version: "3.10"
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install flake8 pytest
+        if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+    - name: Lint with flake8
+      run: |
+                  - nombre: Configurar el entorno Node.js
+  usos: acciones/setup-node@v4.0.3
+  con:
+    # Establezca always-auth en npmrc.
+    always-auth: # opcional, el valor predeterminado es falso
+    # Versión Especificación de la versión que se utilizará. Ejemplos: 12.x, 10.15.1, >=10.15.0.
+    node-version: # opcional
+    # Archivo que contiene la especificación de la versión que se utilizará. Ejemplos: package.json, .nvmrc, .node-version, .tool-versions.
+    archivo-versión-nodo: # opcional
+    # Arquitectura de destino que utilizará Node. Ejemplos: x86, x64. Se utilizará la arquitectura del sistema de forma predeterminada.
+    arquitectura: # opcional
+    # Configure esta opción si desea que la acción busque la última versión disponible que satisfaga la especificación de la versión.
+    check-latest: # opcional
+    # Registro opcional para configurar la autenticación. Se configurará el registro en un archivo .npmrc y .yarnrc a nivel de proyecto y se configurará la autenticación para leer desde env.NODE_AUTH_TOKEN.
+    URL del registro: # opcional
+    # Ámbito opcional para la autenticación en registros con ámbito. Se recurrirá al propietario del repositorio cuando se utilice el registro de paquetes de GitHub (https://npm.pkg.github.com/).
+    alcance: # opcional
+    # Se utiliza para extraer distribuciones de nodos de node-versions. Dado que hay un valor predeterminado, normalmente el usuario no lo proporciona. Al ejecutar esta acción en github.com, el valor predeterminado es suficiente. Al ejecutar en GHES, puede pasar un token de acceso personal para github.com si experimenta una limitación de velocidad.
+    token: # opcional, el valor predeterminado es ${{ github.server_url == 'https://github.com' && github.token || '' }}
+    # Se utiliza para especificar un administrador de paquetes para el almacenamiento en caché en el directorio predeterminado. Valores admitidos: npm, yarn, pnpm.
+    caché: # opcional
+    # Se utiliza para especificar la ruta a un archivo de dependencia: package-lock.json, yarn.lock, etc. Admite caracteres comodín o una lista de nombres de archivos para almacenar en caché varias dependencias.
+    ruta de dependencia de caché: # opcional
+          name: ci-python-deployment.yml
+
+on:
+  push:
+    branches:
+      - main
+      - development
+      - 'feature/*'
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+  build-python:
+    runs-on: ubuntu-latest
+    needs: setup
+    strategy:
+      matrix:
+        python-version: [3.12] 
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run tests
+        run: |
+          pytest
+
+  build-node:
+    runs-on: ubuntu-latest
+    needs: setup
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '16.x'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test
+
+  deploy:
+    runs-on: ubuntu-latest
+    needs: [build-python, build-node]
+
+    steps:
+      - name: Deploy to Production
+        run: |
+          echo aws cli
+          
+      - name: Notify Slack
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
+
+      - name: Cache dependencies
+        uses: actions/cache@v2
+        with:
+          path: ~/.cache/pip
+          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+          restore-keys: |
+            ${{ runner.os }}-pip-
+
